@@ -1,10 +1,11 @@
 const serviceInventory = require("../services/inventory");
 
 class ApiInventory {
-    async FindAll(_, res) {
+    async FindAll(req, res) {
         try {
-            const result = await serviceInventory.FindAll();
-            res.status(200).send({ result });
+            const organizationId = req.session.organizationId
+            const inventories = await serviceInventory.FindAll(organizationId);
+            res.status(200).send({ inventories });
         } catch (e) {
             res.status(500).send({ msg: e.message });
         }
@@ -12,9 +13,13 @@ class ApiInventory {
 
     async FindById(req, res) {
         try {
+            const organizationId = req.session.organizationId
             const { id } = req.params;
-            const result = await serviceInventory.FindById(id);
-            res.status(200).send({ result });
+            const inventory = await serviceInventory.FindById(organizationId, id);
+            if(!inventory) {
+                return res.status(404).send();
+            }
+            res.status(200).send({ inventory });
         } catch (e) {
             res.status(500).send({ msg: e.message });
         }
@@ -22,8 +27,9 @@ class ApiInventory {
 
     async Create(req, res) {
         try {
-            const { name, location, organizationId } = req.body;
-            await serviceInventory.Create(name, location, organizationId);
+            const organizationId = req.session.organizationId
+            const { name } = req.body;
+            await serviceInventory.Create(name, organizationId);
             res.status(201).send();
         } catch (e) {
             res.status(500).send({ msg: e.message });
@@ -32,10 +38,11 @@ class ApiInventory {
 
     async Update(req, res) {
         try {
+            const organizationId = req.session.organizationId
             const { id } = req.params;
-            const { name, location, organizationId } = req.body;
-            const result = await serviceInventory.Update(id, name, location, organizationId);
-            res.status(200).send({ result });
+            const { name } = req.body;
+            const inventory = await serviceInventory.Update(organizationId, id, name);
+            res.status(200).send({ inventory });
         } catch (e) {
             res.status(500).send({ msg: e.message });
         }
@@ -43,8 +50,9 @@ class ApiInventory {
 
     async Delete(req, res) {
         try {
+            const organizationId = req.session.organizationId
             const { id } = req.params;
-            await serviceInventory.Delete(id);
+            await serviceInventory.Delete(organizationId, id);
             res.status(204).send();
         } catch (e) {
             res.status(500).send({ msg: e.message });

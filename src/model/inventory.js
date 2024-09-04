@@ -13,10 +13,6 @@ class Inventory {
                 type: database.db.Sequelize.STRING,
                 allowNull: false
             },
-            location: {
-                type: database.db.Sequelize.STRING,
-                allowNull: true
-            },
             organizationId: {
                 type: database.db.Sequelize.INTEGER,
                 references: {

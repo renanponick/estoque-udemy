@@ -1,9 +1,10 @@
 const serviceUser = require("../services/user")
 
 class ApiUser {
-    async FindAll(_, res) {
+    async FindAll(req, res) {
         try {
-            const result = await serviceUser.FindAll()
+            const organizationId = req.session.organizationId
+            const result = await serviceUser.FindAll(organizationId)
             
             res.status(200).send({ result })
         } catch (e) {
@@ -13,10 +14,12 @@ class ApiUser {
 
     async FindById(req, res) {
         try {
-            const { id } = req.params
-            const result = await serviceUser.FindById(id)
+            const organizationId = req.session.organizationId
+            const userId = req.params.id || req.session.id
 
-            res.status(200).send({ result })
+            const user = await serviceUser.FindById(organizationId, userId)
+
+            res.status(200).send({ user })
         } catch (e) {
             res.status(500).send({ msg: e.message })
         }
@@ -24,8 +27,9 @@ class ApiUser {
 
     async Create(req, res) {
         try {
-            const { email, password } = req.body
-            await serviceUser.Create(email, password)
+            const organizationId = req.session.organizationId
+            const { name, email, password, role } = req.body
+            await serviceUser.Create(name, email, password, role, organizationId)
             
             res.status(201).send()
         } catch (e) {
@@ -35,11 +39,13 @@ class ApiUser {
 
     async Update(req, res) {
         try {
-            const { id } = req.params
-            const { email, password } = req.body
-            const result = await serviceUser.Update(id, email, password)
+            const organizationId = req.session.organizationId
+            const id = req.params.id || req.session.id
+            const actualRole = req.session.role
+            const { name, email, password, role } = req.body
+            const user = await serviceUser.Update(organizationId, id, name, email, password, role, actualRole)
             
-            res.status(200).send({ result })
+            res.status(200).send({ user })
         } catch (e) {
             res.status(500).send({ msg: e.message })
         }
@@ -47,8 +53,9 @@ class ApiUser {
 
     async Delete(req, res) {
         try {
-            const { id } = req.params
-            await serviceUser.Delete(id)
+            const organizationId = req.session.organizationId
+            const id = req.params.id || req.session.id
+            await serviceUser.Delete(organizationId, id)
             
             res.status(204).send()
         } catch (e) {

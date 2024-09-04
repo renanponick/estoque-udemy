@@ -17,14 +17,6 @@ class Product {
                 type: database.db.Sequelize.STRING,
                 allowNull: true
             },
-            barcode: {
-                type: database.db.Sequelize.STRING,
-                allowNull: true
-            },
-            unitOfMeasure: {
-                type: database.db.Sequelize.STRING,
-                allowNull: false
-            },
             organizationId: {
                 type: database.db.Sequelize.INTEGER,
                 references: {

@@ -1,12 +1,19 @@
+const getProductsFromInventory = require("../fns/resume-movements");
 const inventory = require("../model/inventory");
+const inventoryMovement = require("./inventoryMovement");
 
 class ServiceInventory {
-    async FindAll(transaction) {
-        return inventory.findAll({ transaction });
+    async FindAll(organizationId, transaction) {
+        return inventory.findAll({ where: { organizationId }, transaction });
     }
 
-    async FindById(id, transaction) {
-        return inventory.findByPk(id, { transaction });
+    async FindById(organizationId, id, transaction) {
+        const inventoryInfo = await inventory.findOne({ where: { organizationId, id }, transaction });
+        const inventoryMovements = await inventoryMovement.FindAll(id)
+
+        const resume = getProductsFromInventory(inventoryMovements)
+
+        return { ...inventoryInfo.dataValues, ...resume } 
     }
 
     async Create(name, organizationId, transaction) {
@@ -17,8 +24,8 @@ class ServiceInventory {
         return inventory.create({ name, organizationId }, { transaction });
     }
 
-    async Update(id, name, transaction) {
-        const existingInventory = await this.FindById(id, transaction);
+    async Update(organizationId, id, name, transaction) {
+        const existingInventory = await this.FindById(organizationId, id, transaction);
 
         existingInventory.name = name || existingInventory.name;
 
@@ -27,8 +34,11 @@ class ServiceInventory {
         return existingInventory;
     }
 
-    async Delete(id, transaction) {
-        const existingInventory = await this.FindById(id, transaction);
+    async Delete(organizationId, id, transaction) {
+        const existingInventory = await this.FindById(organizationId, id, transaction);
+        if(!existingInventory) {
+            throw new Error("Favor informar o estoque corretamente")
+        }
         await existingInventory.destroy({ transaction });
         return true;
     }

@@ -1,10 +1,11 @@
 const serviceInventoryMovement = require("../services/inventoryMovement");
 
 class ApiInventoryMovement {
-    async FindAll(_, res) {
+    async FindAllByInventory(req, res) {
         try {
-            const result = await serviceInventoryMovement.FindAll();
-            res.status(200).send({ result });
+            const { inventoryId } = req.params
+            const inventoryMovement = await serviceInventoryMovement.FindAll(inventoryId);
+            res.status(200).send({ inventoryMovement });
         } catch (e) {
             res.status(500).send({ msg: e.message });
         }
@@ -12,9 +13,12 @@ class ApiInventoryMovement {
 
     async FindById(req, res) {
         try {
-            const { id } = req.params;
-            const result = await serviceInventoryMovement.FindById(id);
-            res.status(200).send({ result });
+            const { inventoryId, id } = req.params;
+            const inventoryMovement = await serviceInventoryMovement.FindById(inventoryId, id);
+            if(!inventoryMovement) {
+                return res.status(404).send();
+            }
+            res.status(200).send({ inventoryMovement });
         } catch (e) {
             res.status(500).send({ msg: e.message });
         }
@@ -22,8 +26,11 @@ class ApiInventoryMovement {
 
     async Create(req, res) {
         try {
-            const { userId, inventoryId, productId, quantity, type } = req.body;
-            await serviceInventoryMovement.Create(userId, inventoryId, productId, quantity, type);
+            const { inventoryId } = req.params;
+            const userId = req.session.id
+            const { productId, quantity, type } = req.body;
+
+            await serviceInventoryMovement.Create(inventoryId, userId, productId, type, quantity);
             res.status(201).send();
         } catch (e) {
             res.status(500).send({ msg: e.message });
@@ -32,10 +39,11 @@ class ApiInventoryMovement {
 
     async Update(req, res) {
         try {
-            const { id } = req.params;
-            const { userId, inventoryId, productId, quantity, type } = req.body;
-            const result = await serviceInventoryMovement.Update(id, userId, inventoryId, productId, quantity, type);
-            res.status(200).send({ result });
+            const { id, inventoryId } = req.params;
+            const { quantity, type } = req.body;
+
+            const inventoryMovement = await serviceInventoryMovement.Update(inventoryId, id, type, quantity);
+            res.status(200).send({ inventoryMovement });
         } catch (e) {
             res.status(500).send({ msg: e.message });
         }
@@ -43,8 +51,8 @@ class ApiInventoryMovement {
 
     async Delete(req, res) {
         try {
-            const { id } = req.params;
-            await serviceInventoryMovement.Delete(id);
+            const { inventoryId, id } = req.params;
+            await serviceInventoryMovement.Delete(inventoryId, id);
             res.status(204).send();
         } catch (e) {
             res.status(500).send({ msg: e.message });

@@ -1,10 +1,11 @@
 const serviceProduct = require("../services/product");
 
 class ApiProduct {
-    async FindAll(_, res) {
+    async FindAll(req, res) {
         try {
-            const result = await serviceProduct.FindAll();
-            res.status(200).send({ result });
+            const organizationId = req.session.organizationId
+            const products = await serviceProduct.FindAll(organizationId);
+            res.status(200).send({ products });
         } catch (e) {
             res.status(500).send({ msg: e.message });
         }
@@ -12,9 +13,14 @@ class ApiProduct {
 
     async FindById(req, res) {
         try {
+            const organizationId = req.session.organizationId
             const { id } = req.params;
-            const result = await serviceProduct.FindById(id);
-            res.status(200).send({ result });
+            const product = await serviceProduct.FindById(organizationId, id);
+            if(!product) {
+                return res.status(404).send();
+            }
+
+            res.status(200).send({ product });
         } catch (e) {
             res.status(500).send({ msg: e.message });
         }
@@ -22,8 +28,9 @@ class ApiProduct {
 
     async Create(req, res) {
         try {
-            const { name, description, barcode, unitOfMeasure, organizationId } = req.body;
-            await serviceProduct.Create(name, description, barcode, unitOfMeasure, organizationId);
+            const organizationId = req.session.organizationId
+            const { name, description } = req.body;
+            await serviceProduct.Create(name, description, organizationId);
             res.status(201).send();
         } catch (e) {
             res.status(500).send({ msg: e.message });
@@ -32,10 +39,11 @@ class ApiProduct {
 
     async Update(req, res) {
         try {
+            const organizationId = req.session.organizationId
             const { id } = req.params;
-            const { name, description, barcode, unitOfMeasure, organizationId } = req.body;
-            const result = await serviceProduct.Update(id, name, description, barcode, unitOfMeasure, organizationId);
-            res.status(200).send({ result });
+            const { name, description } = req.body;
+            const product = await serviceProduct.Update(organizationId, id, name, description);
+            res.status(200).send({ product });
         } catch (e) {
             res.status(500).send({ msg: e.message });
         }
@@ -43,8 +51,9 @@ class ApiProduct {
 
     async Delete(req, res) {
         try {
+            const organizationId = req.session.organizationId
             const { id } = req.params;
-            await serviceProduct.Delete(id);
+            await serviceProduct.Delete(organizationId, id);
             res.status(204).send();
         } catch (e) {
             res.status(500).send({ msg: e.message });

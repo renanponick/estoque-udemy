@@ -1,36 +1,53 @@
 const user = require("../model/user")
 const jwt = require("jsonwebtoken")
 const bcrypy = require('bcrypt')
+const organization = require("../model/organization")
 
 const secretKey = "M!nh4S3nh4Secreta"
 const salt = 10
+const roles = ['admin', 'employee']
 
 class ServiceUser {
-    async FindAll(transaction) {
-        return user.findAll({ transaction });
+    async FindAll(organizationId, transaction) {
+        return user.findAll({where: { organizationId }, transaction });
     }
 
-    async FindById(id, transaction) {
-        return user.findByPk(id, { transaction })
+    async FindById(organizationId, id, transaction) {
+        return user.findOne({ where: { id, organizationId }, transaction })
     }
 
-    async Create(email, password, transaction) {
-         if (!email) {
+    async Create(name, email, password, role, organizationId, transaction) {
+         if (!name) {
+            throw new Error("Favor informar name")
+        } else if (!email) {
             throw new Error("Favor informar email")
         } else if (!password) {
             throw new Error("Favor informar senha")
+        } else if (!role || !roles.includes(role)) {
+            throw new Error("Favor informar role corretamente, admin ou employee")
+        } else if (!organizationId) {
+            throw new Error("Favor informar organizationId")
         }
 
         const hasPass = await bcrypy.hash(password, salt)
 
         return user.create({
-           email, password: hasPass
+            name, email, password: hasPass, role, organizationId
         }, { transaction })
     }
 
-    async Update(id, email, password, transaction) {
-        const oldUser = await this.FindById(id, transaction)
+    async Update(organizationId, id, name, email, password, role, actualRole, transaction) {
+        const oldUser = await this.FindById(organizationId, id, transaction)
 
+        if (role && !roles.includes(role)) {
+            throw new Error("Favor informar role corretamente, admin ou employee")
+        }
+
+        if(actualRole == 'admin'){
+            oldUser.role = role || oldUser.role
+        }
+
+        oldUser.name = name || oldUser.name
         oldUser.email = email || oldUser.email
         oldUser.password = password ? await bcrypy.hash(password, salt) : oldUser.password
 
@@ -39,8 +56,12 @@ class ServiceUser {
         return oldUser
     }
 
-    async Delete(id, transaction) {
-        const user = await this.FindById(id, transaction)
+    async Delete(organizationId, id, transaction) {
+        const user = await this.FindById(organizationId, id, transaction)
+
+        if(!user) {
+            throw new Error("Favor informar o usuário corretamente")
+        }
 
         user.destroy({ transaction })
 
@@ -54,19 +75,27 @@ class ServiceUser {
             throw new Error("Favor informar senha")
         }
 
-        const currentUser = await user.findOne({ where: { email } })
+        const currentUser = await user.findOne({ where: { email }, include: { model: organization } })
 
-        if (!currentUser){
+        if (!currentUser.email){
             throw new Error("Email ou senha inválidos")
         }
 
         const verify = await bcrypy.compare(password, currentUser.password)
 
         if(verify){
-            return jwt.sign({ id: currentUser.id }, secretKey, { expiresIn: 60 * 60 })
+            return jwt.sign({
+                id: currentUser.id,
+                role: currentUser.role,
+                organizationId: currentUser.organization.id
+            }, secretKey, { expiresIn: 60 * 60 })
         }
 
         throw new Error("Email ou senha inválidos")
+    }
+
+    async Verify(id, role) {
+        return user.findOne({ where: { id, role }})
     }
 }
 

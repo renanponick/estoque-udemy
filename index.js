@@ -6,23 +6,18 @@ const productRouter = require('./src/routes/product')
 const organizationRouter = require('./src/routes/organization')
 const database = require('./src/database')
 const apiUser = require('./src/api/user')
-const apiOrganization = require('./src/api/organization')
-const authMiddleware = require('./src/middleware/auth')
 
 const app = express()
 const porta = 3000
 app.use(express.json())
 
-app.post('/api/v1/organization', apiOrganization.Create);
 app.post('/api/v1/login/', apiUser.Login)
 
-app.use(authMiddleware)
-
+app.use('/api/v1/organization', organizationRouter)
 app.use('/api/v1/user', userRouter)
+app.use('/api/v1/product', productRouter)
 app.use('/api/v1/inventory', inventoryRouter)
 app.use('/api/v1/inventoryMovement', inventoryMovementRouter)
-app.use('/api/v1/product', productRouter)
-app.use('/api/v1/organization', organizationRouter)
 
 database.db
     .sync({ force: false })

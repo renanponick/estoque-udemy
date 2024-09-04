@@ -36,7 +36,8 @@ class User {
         });
 
         this.model.belongsTo(Organization, {
-            foreignKey: 'organizationId'
+            foreignKey: 'organizationId',
+            onDelete: 'CASCADE'
         });
         Organization.hasMany(this.model, {
             foreignKey: 'organizationId'

@@ -1,24 +1,31 @@
 const inventoryMovement = require("../model/inventoryMovement");
+const product = require("../model/product");
+
+const types = ['out', 'in']
 
 class ServiceInventoryMovement {
-    async FindAll(transaction) {
-        return inventoryMovement.findAll({ transaction });
+    async FindAll(inventoryId, transaction) {
+        return inventoryMovement.findAll({ where: { inventoryId }, include: { model: product }, transaction });
     }
 
-    async FindById(id, transaction) {
-        return inventoryMovement.findByPk(id, { transaction });
+    async FindById(inventoryId, id, transaction) {
+        return inventoryMovement.findOne({ where: { inventoryId, id }, transaction });
     }
 
-    async Create(type, quantity, inventoryId, productId, userId, transaction) {
-        if (!type || !quantity || !inventoryId || !productId || !userId) {
-            throw new Error("Please provide all required fields");
+    async Create(inventoryId, userId, productId, type, quantity, transaction) {
+        if (!type || !quantity || !productId || !types.includes(type)) {
+            throw new Error("Favor enviar todos os dados corretamente");
         }
 
         return inventoryMovement.create({ type, quantity, inventoryId, productId, userId }, { transaction });
     }
 
-    async Update(id, type, quantity, transaction) {
-        const existingMovement = await this.FindById(id, transaction);
+    async Update(inventoryId, id, type, quantity, transaction) {
+        const existingMovement = await this.FindById(inventoryId, id, transaction);
+
+        if (type && !types.includes(type)) {
+            throw new Error("Favor enviar todos os dados corretamente");
+        }
 
         existingMovement.type = type || existingMovement.type;
         existingMovement.quantity = quantity || existingMovement.quantity;
@@ -28,8 +35,8 @@ class ServiceInventoryMovement {
         return existingMovement;
     }
 
-    async Delete(id, transaction) {
-        const existingMovement = await this.FindById(id, transaction);
+    async Delete(inventoryId, id, transaction) {
+        const existingMovement = await this.FindById(inventoryId, id, transaction);
         await existingMovement.destroy({ transaction });
         return true;
     }

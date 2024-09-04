@@ -1,13 +1,10 @@
-const organization = require("../model/organization");
-const user = require("./user");
+const generateRandomPassword = require("../fns/generate-password");
+const organizationModel = require("../model/organization");
+const userService = require("./user");
 
 class ServiceOrganization {
-    async FindAll(transaction) {
-        return organization.findAll({ transaction });
-    }
-
     async FindById(id, transaction) {
-        return organization.findByPk(id, { transaction });
+        return organizationModel.findByPk(id, { transaction });
     }
 
     async Create(name, address, phone, email, transaction) {
@@ -21,17 +18,29 @@ class ServiceOrganization {
             throw new Error("Please provide organization email");
         }
 
-        const org = await organization.create({ name, address, phone, email }, { transaction });
+        const organization = await organizationModel.create(
+            { name, address, phone, email },
+            { transaction }
+        );
+        const password = generateRandomPassword(12)
+        const user = await userService.Create(
+            "admin",
+            email,
+            password,
+            "admin",
+            organization.id
+        )
 
-        await user.Create(email, name)
-
-        return org
+        return { organization, user: { ...user.dataValues, password: password } }
     }
 
     async Update(id, name, address, phone, email, transaction) {
         const existingOrganization = await this.FindById(id, transaction);
 
         existingOrganization.name = name || existingOrganization.name;
+        existingOrganization.address = address || existingOrganization.address;
+        existingOrganization.phone = phone || existingOrganization.phone;
+        existingOrganization.email = email || existingOrganization.email;
 
         await existingOrganization.save({ transaction });
 
@@ -40,6 +49,9 @@ class ServiceOrganization {
 
     async Delete(id, transaction) {
         const existingOrganization = await this.FindById(id, transaction);
+        if(!existingOrganization) {
+            throw new Error("Favor informar a organização corretamente")
+        }
         await existingOrganization.destroy({ transaction });
         return true;
     }

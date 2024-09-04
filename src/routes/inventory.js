@@ -1,12 +1,13 @@
 const apiInventory = require('../api/inventory');
 const express = require('express');
+const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
-router.get('/', apiInventory.FindAll);
-router.get('/:id', apiInventory.FindById);
-router.post('/', apiInventory.Create);
-router.put('/:id', apiInventory.Update);
-router.delete('/:id', apiInventory.Delete);
+router.get('/', authMiddleware(), apiInventory.FindAll);
+router.get('/:id', authMiddleware(), apiInventory.FindById);
+router.post('/', authMiddleware(), apiInventory.Create);
+router.put('/:id', authMiddleware(), apiInventory.Update);
+router.delete('/:id', authMiddleware(), apiInventory.Delete);
 
 module.exports = router;

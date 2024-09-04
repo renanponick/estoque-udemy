@@ -23,7 +23,6 @@ Para o aplicativo de controle de estoque, com base nos requisitos fornecidos, po
    - **Atributos**:
      - `id`: Identificador único do estoque.
      - `nome`: Nome do estoque.
-     - `localizacao`: Localização do estoque.
      - `itens`: Lista de itens (produtos com quantidade) armazenados no estoque.
      - `organizacaoId`: Referência à organização proprietária do estoque.
    - **Métodos**:
@@ -50,11 +49,9 @@ Para o aplicativo de controle de estoque, com base nos requisitos fornecidos, po
      - `id`: Identificador único do produto.
      - `nome`: Nome do produto.
      - `descricao`: Descrição do produto.
-     - `codigoBarras`: Código de barras do produto.
-     - `unidadeMedida`: Unidade de medida (ex.: kg, litro, unidade).
      - `organizacaoId`: Referência à organização que cadastrou o produto.
    - **Métodos**:
-     - `atualizarInformacoes(nome: string, descricao: string, codigoBarras: string, unidadeMedida: string)`: Atualiza as informações do produto.
+     - `atualizarInformacoes(nome: string, descricao: string)`: Atualiza as informações do produto.
 
 ## 5. **Classe `MovimentacaoEstoque`**
    - **Descrição**: Representa uma movimentação de estoque, seja de entrada ou saída de produtos.
@@ -71,6 +68,6 @@ Para o aplicativo de controle de estoque, com base nos requisitos fornecidos, po
 
 ## Considerações Adicionais
 - A criação de uma organização deverá criar automaticamente o usuário com role de administrador da organização;
-- A organização deverá ter no minimo um usuário administrador ativo, não podendo deletar todos ao mesmo tempo;
+- Somente usuário com role de administrador poderá alterar/deletar a organização;
 - Somente usuário com role de administrador poderá criar/alterar/deletar outros usuários para a organização;
 - Cada usuário só pode acessar e movimentar o estoque da sua própria organização;
